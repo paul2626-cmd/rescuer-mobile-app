@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "Kalinga Rescuer",
+    "slug": "kalinga-rescuer",
+    "scheme": "kalingarescuer",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "icon": "./assets/icon.png",
+    "newArchEnabled": true,
+    "android": {
+      "package": "com.rescuer.mobile",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/kalinga-symbol.png",
+        "backgroundColor": "#09090b"
+      },
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "CAMERA",
+        "POST_NOTIFICATIONS"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow Kalinga to use your location while you view an assigned incident."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Kalinga to attach operation photos to a rescue record.",
+          "cameraPermission": "Allow Kalinga to take operation photos for a rescue record.",
+          "microphonePermission": false
+        }
+      ],
+      ["expo-notifications", { "color": "#ff4b50" }],
+      "expo-router",
+      "@maplibre/maplibre-react-native"
+    ],
+    "extra": {
+      "apiBaseUrl": "https://disaster-response-system-zhe5.onrender.com",
+      "eas": {}
+    }
+  }
+}
