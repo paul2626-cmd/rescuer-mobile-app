@@ -5,6 +5,26 @@ const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 const supabaseKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
 const apiBaseUrl = (process.env.EXPO_PUBLIC_API_BASE_URL ?? '').replace(/\/$/, '');
 let client: SupabaseClient | null = null;
+const AUTH_REQUEST_TIMEOUT_MS = 20_000;
+const API_REQUEST_TIMEOUT_MS = 45_000;
+const authStorageKey = supabaseUrl
+  ? `sb-${supabaseUrl.replace(/^https?:\/\//, '').split('.')[0]}-auth-token`
+  : 'kalinga-rescuer-auth-token';
+
+const authFetchWithTimeout: typeof fetch = async (input, init = {}) => {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), AUTH_REQUEST_TIMEOUT_MS);
+  const abortFromCaller = () => controller.abort();
+  init.signal?.addEventListener('abort', abortFromCaller);
+  if (init.signal?.aborted) controller.abort();
+
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+    init.signal?.removeEventListener('abort', abortFromCaller);
+  }
+};
 
 export function getSupabaseClient() {
   if (!supabaseUrl || !supabaseKey) {
@@ -18,6 +38,7 @@ export function getSupabaseClient() {
         persistSession: true,
         detectSessionInUrl: false,
       },
+      global: { fetch: authFetchWithTimeout },
     });
   }
   return client;
@@ -25,6 +46,10 @@ export function getSupabaseClient() {
 
 export function getApiBaseUrl() {
   return apiBaseUrl;
+}
+
+export async function clearSavedAuthSession() {
+  await AsyncStorage.removeItem(authStorageKey);
 }
 
 export class ApiError extends Error {
@@ -53,27 +78,40 @@ export async function api<T = any>(
   const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
   if (body !== undefined && !isForm) headers['Content-Type'] = 'application/json';
 
-  let response: Response;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), API_REQUEST_TIMEOUT_MS);
   try {
-    response = await fetch(`${apiBaseUrl}${path}`, {
+    const response = await fetch(`${apiBaseUrl}${path}`, {
       method,
       headers,
       body: body === undefined ? undefined : isForm ? (body as FormData) : JSON.stringify(body),
+      signal: controller.signal,
     });
-  } catch {
-    throw new Error('We could not reach the server. Check your connection and try again.');
-  }
 
-  const payload = await response.json().catch(() => null);
-  if (!response.ok || payload?.success === false) {
-    const message = payload?.error?.message ?? (
-      response.status >= 500
-        ? 'The server is temporarily unavailable. Please try again in a moment.'
-        : `Request failed (${response.status})`
-    );
-    throw new ApiError(message, response.status, payload?.error?.code);
+    let payload: any = null;
+    try {
+      payload = await response.json();
+    } catch (error) {
+      if (controller.signal.aborted) throw error;
+    }
+    if (!response.ok || payload?.success === false) {
+      const message = payload?.error?.message ?? (
+        response.status >= 500
+          ? 'The server is temporarily unavailable. Please try again in a moment.'
+          : `Request failed (${response.status})`
+      );
+      throw new ApiError(message, response.status, payload?.error?.code);
+    }
+    return (payload?.data ?? payload) as T;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('The rescue server took too long to respond. Wait a moment, then try again.');
+    }
+    throw new Error('We could not reach the server. Check your connection and try again.');
+  } finally {
+    clearTimeout(timeout);
   }
-  return (payload?.data ?? payload) as T;
 }
 
 export function unwrapItems(data: any): any[] {

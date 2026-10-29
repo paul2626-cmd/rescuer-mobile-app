@@ -27,19 +27,41 @@ function Gate() {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: C.bg }}>
         <ActivityIndicator color={C.red} size="large" />
-        <Txt muted style={{ marginTop: 12 }}>Restoring your secure session…</Txt>
+        <Txt muted style={{ marginTop: 12 }}>
+          {ready ? 'Connecting to the rescue service…' : 'Checking your saved sign-in…'}
+        </Txt>
+        {ready && profileLoading ? (
+          <Txt muted style={{ marginTop: 8, textAlign: 'center', paddingHorizontal: 36 }}>
+            The server may take a little longer to start. You can retry if it does not respond.
+          </Txt>
+        ) : null}
+      </View>
+    );
+  }
+
+  if (configError) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', padding: 24, backgroundColor: C.bg }}>
+        <Txt size={25} bold style={{ marginBottom: 12 }}>We couldn’t restore your sign-in</Txt>
+        <ErrorNotice message={configError} />
+        <Txt muted style={{ marginTop: 14 }}>
+          Clear the saved session to return to sign in. Your account and rescue records will not be changed.
+        </Txt>
+        <Btn style={{ marginTop: 20 }} onPress={() => signOut().catch(() => {})}>
+          Clear session and sign in
+        </Btn>
       </View>
     );
   }
 
   if (!session) return <Redirect href="/login" />;
 
-  if (profileError || configError) {
+  if (profileError) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', padding: 24, backgroundColor: C.bg }}>
         <Txt size={25} bold style={{ marginBottom: 12 }}>Could not verify your account</Txt>
-        <ErrorNotice message={profileError || configError} />
-        {profileError ? <Btn onPress={() => refreshProfile().catch(() => {})}>Try again</Btn> : null}
+        <ErrorNotice message={profileError} />
+        <Btn onPress={() => refreshProfile().catch(() => {})}>Try again</Btn>
         <Btn secondary style={{ marginTop: 10 }} onPress={() => signOut().catch(() => {})}>Sign out</Btn>
       </View>
     );

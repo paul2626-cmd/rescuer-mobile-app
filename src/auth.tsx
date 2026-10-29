@@ -1,6 +1,8 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
-import { api, getSupabaseClient } from './backend';
+import { api, clearSavedAuthSession, getSupabaseClient } from './backend';
+
+const SESSION_RESTORE_TIMEOUT_MS = 18_000;
 
 type Profile = {
   user_id: string;
@@ -32,26 +34,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState('');
   const [configError, setConfigError] = useState('');
+  const ignoreRestoredSession = useRef(false);
 
   useEffect(() => {
     let alive = true;
     let subscription: { unsubscribe: () => void } | undefined;
+    let restoreTimeout: ReturnType<typeof setTimeout> | undefined;
 
     try {
       const supabase = getSupabaseClient();
+      restoreTimeout = setTimeout(() => {
+        if (!alive) return;
+        setConfigError('Your saved sign-in is taking too long to restore. Clear it and sign in again.');
+        setReady(true);
+      }, SESSION_RESTORE_TIMEOUT_MS);
+
       supabase.auth.getSession().then(({ data, error }) => {
         if (!alive) return;
-        if (error) setProfileError(error.message);
-        setSession(data.session ?? null);
+        if (restoreTimeout) clearTimeout(restoreTimeout);
+        setConfigError(error?.message ?? '');
+        setSession(ignoreRestoredSession.current ? null : data.session ?? null);
         setReady(true);
       }).catch((error: unknown) => {
         if (!alive) return;
+        if (restoreTimeout) clearTimeout(restoreTimeout);
         setConfigError(error instanceof Error ? error.message : 'Could not restore the session.');
         setReady(true);
       });
-      const listener = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      const listener = supabase.auth.onAuthStateChange((event, nextSession) => {
         if (!alive) return;
+        if (restoreTimeout) clearTimeout(restoreTimeout);
+        if (event === 'SIGNED_IN') ignoreRestoredSession.current = false;
+        if (ignoreRestoredSession.current && event !== 'SIGNED_IN') {
+          setSession(null);
+          setConfigError('');
+          setReady(true);
+          return;
+        }
         setSession(nextSession);
+        setConfigError('');
         setReady(true);
       });
       subscription = listener.data.subscription;
@@ -62,6 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       alive = false;
+      if (restoreTimeout) clearTimeout(restoreTimeout);
       subscription?.unsubscribe();
     };
   }, []);
@@ -105,8 +127,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
-    await getSupabaseClient().auth.signOut();
+    ignoreRestoredSession.current = true;
     setProfile(null);
+    setProfileError('');
+    setConfigError('');
+    setSession(null);
+    setReady(true);
+    await clearSavedAuthSession().catch(() => {});
+    try {
+      void getSupabaseClient().auth.signOut({ scope: 'local' }).catch(() => {});
+    } catch {
+      // The local saved session is already cleared, so continue to the sign-in screen.
+    }
   }, []);
 
   const refreshProfile = useCallback(
