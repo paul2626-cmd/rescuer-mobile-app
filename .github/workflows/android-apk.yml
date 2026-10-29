@@ -92,13 +92,8 @@ jobs:
             adb install -r Kalinga-Rescuer-arm.apk
             adb shell pm clear com.rescuer.mobile
             adb logcat -c
-            activity="$(adb shell cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -p com.rescuer.mobile | tail -n 1 | tr -d '\r')"
-            case "$activity" in
-              com.rescuer.mobile/*) ;;
-              *) activity="com.rescuer.mobile/.MainActivity" ;;
-            esac
-            printf 'Starting %s\n' "$activity"
-            adb shell am start -n "$activity" || true
+            adb shell cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -p com.rescuer.mobile || true
+            adb shell am start -n com.rescuer.mobile/.MainActivity || true
             sleep 10
             adb shell pidof com.rescuer.mobile > qa-output/pid.txt || true
             adb exec-out screencap -p > qa-output/startup.png
