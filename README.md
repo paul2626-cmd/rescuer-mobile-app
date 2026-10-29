@@ -13,7 +13,9 @@ The native map, camera, location, and push packages require an Android developme
 
 ## Get an APK
 
-The `Build Android APK` GitHub Actions workflow runs on pushes to `main` and on manual dispatch. It uploads an installable debug APK as the `kalinga-rescuer-apk` workflow artifact. Download and extract the artifact, then install `app-debug.apk` on an Android device.
+The `Build Android APK` workflow builds a release APK with the JavaScript bundle embedded. It includes ARMv7 and ARM64 libraries and excludes x86 emulator ABIs. The workflow checks the bundle, ABI set, and a 100 MiB size ceiling before uploading the `kalinga-rescuer-arm-apk` artifact. This APK is for ARM Android phones; it is not a Play Store-signed release.
+
+The current build was produced by [GitHub Actions run #5](https://github.com/paul2626-cmd/rescuer-mobile-app/actions/runs/40806738214) on branch `fix/android-release-apk`.
 
 ## Migration notes
 

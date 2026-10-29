@@ -27,7 +27,7 @@ The MapLibre map, camera, native location, and device push require a development
 
 ## APK build
 
-The repository includes an Android GitHub Actions workflow that builds an installable debug APK and uploads it as a workflow artifact. A debug APK does not require a production signing key. When workflow completes, download the `kalinga-rescuer-apk` artifact and install `app-debug.apk` on an Android device.
+The Android GitHub Actions workflow builds a release APK so the JavaScript bundle is included. It packages ARMv7 and ARM64 libraries and excludes x86 emulator ABIs. The artifact is named `kalinga-rescuer-arm-apk`; the workflow verifies its bundle and size before upload. The current APK is 55,550,599 bytes. It is intended for ARM Android phones and is not signed for Play Store distribution.
 
 For a local EAS preview APK, configure EAS credentials and use `eas build --platform android --profile preview`.
 
@@ -38,5 +38,6 @@ For a local EAS preview APK, configure EAS credentials and use `eas build --plat
 - No background location upload is enabled because the audited backend has no matching route.
 - Push delivery requires Firebase configuration that matches package `com.rescuer.mobile`; it is not supplied by the old app because that config uses another package ID.
 - Offline status and record writes are not queued; wait for server confirmation before treating the operation as saved.
+- The APK has not been tested on a physical Android device.
 
 See the native feature, visual comparison, and test-results documents for outstanding verification.

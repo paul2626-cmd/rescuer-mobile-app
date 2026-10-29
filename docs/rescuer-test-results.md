@@ -1,17 +1,18 @@
 # Rescuer test results
 
-Updated 2026-10-29. No test suite or physical-device run is claimed here.
+Updated 2026-10-29. No physical-device run is claimed here.
 
 | Check | Result | Evidence |
 | --- | --- | --- |
 | Backend request/payload review | Passed by source inspection | Compared assignment, status, record, completion, evidence, and push routes with supplied backend source |
-| TypeScript typecheck | Passed | `npm run typecheck` |
-| Expo dependency check | Passed | `npx expo install --check` |
+| TypeScript typecheck | Passed | `npm run typecheck` on the APK build workflow |
+| Expo dependency check | Passed | `npx expo install --check` on the APK build workflow |
 | Expo config/native Android prebuild | Passed | `npx expo prebuild --platform android --no-install --clean` |
-| Android JavaScript export | Passed | `npx expo export --platform android` |
-| Android APK build | Passed | [GitHub Actions run #2](https://github.com/paul2626-cmd/rescuer-mobile-app/actions/runs/40797161729) succeeded for commit `61e82092abfbefb927a3d50103bf4d92adc043d1`; the artifact contains `app-debug.apk` |
-| APK artifact verification | Passed | `file` identified an Android package; 183,238,833 bytes; SHA-256 `07d56c4e7dce05d66db9b84cf032ff9c86590ba65353e6395bfec07cd67bc4f5` |
-| APK install and launch | Not run | No Android device/emulator in this runner |
+| Android release APK build | Passed | [GitHub Actions run #5](https://github.com/paul2626-cmd/rescuer-mobile-app/actions/runs/40806738214) on commit `a086f6271e5daac9016be87f0716a12509aa86cd` |
+| Embedded JavaScript bundle | Passed | APK contains `assets/index.android.bundle`; workflow fails if missing |
+| ABI and APK size check | Passed | ARMv7 and ARM64 only; 55,550,599 bytes, below the 100 MiB workflow limit |
+| APK format and checksum | Passed | Recognized as Android package; SHA-256 `11d35a0f2340d444427e791238b850ec466edd2da7e6be79d5254ed93c79aa4d` |
+| APK install and launch | Not run | No Android device/emulator is connected to this build runner |
 | Authentication with Rescuer account | Not run | Requires authorized account and reachable service |
 | Role rejection | Implemented, not runtime-tested | Server `/api/profile` gate plus backend authorization |
 | Record photo upload | Implemented, not runtime-tested | Requires device permission and authenticated backend session |
@@ -21,6 +22,6 @@ Updated 2026-10-29. No test suite or physical-device run is claimed here.
 | Offline write synchronization | Not available | No source queue/idempotency rules found |
 | Screenshot comparison | Not run | Android capture environment not available |
 
-The first CI APK attempt stopped during Expo module autolinking because npm had resolved an incompatible `expo-font` peer release without its Android publication version. Pinning `expo-font` to the Expo SDK 54 compatible release fixed the issue, and the next CI run built the APK successfully. The APK has not been installed or launched on an Android device.
+The original debug APK did not package the JavaScript bundle and displayed “Unable to load script.” The workflow now assembles the release variant and verifies the embedded bundle, supported ARM ABIs, and APK size before upload. The APK has not yet been launched on the user's device.
 
-Do not treat implementation presence as runtime verification. Update this table only with actual run output and device evidence.
+Do not treat build success as device-level verification.

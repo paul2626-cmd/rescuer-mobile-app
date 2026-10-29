@@ -16,5 +16,5 @@ Updated 2026-10-29.
 | Typecheck | Passed | `npm run typecheck` |
 | Expo dependency/config check and Android prebuild | Passed | `npx expo install --check`; `npx expo prebuild --platform android --no-install --clean`; Expo font pin now matches SDK 54 |
 | Android JavaScript export | Passed | `npx expo export --platform android` |
-| Android APK | Built | GitHub Actions run `40797161729` succeeded for commit `61e82092abfbefb927a3d50103bf4d92adc043d1`; the downloaded APK was verified as an Android package |
+| Android APK | Built | Release APK verified in GitHub Actions run `40806738214`: embedded bundle, ARMv7/ARM64 only, 55,550,599 bytes | GitHub Actions run `40797161729` succeeded for commit `61e82092abfbefb927a3d50103bf4d92adc043d1`; the downloaded APK was verified as an Android package |
 | Device visual comparison | Pending | No Android device/emulator capture has been produced |
