@@ -20,4 +20,6 @@ Updated 2026-10-29. No test suite or physical-device run is claimed here.
 | Offline write synchronization | Not available | No source queue/idempotency rules found |
 | Screenshot comparison | Not run | Android capture environment not available |
 
+The first CI APK attempt stopped during Expo module autolinking because npm had resolved an incompatible `expo-font` peer release without its Android publication version. `expo-font` is now pinned to the SDK 54 compatible release; the next CI run will confirm the native build.
+
 Do not treat implementation presence as runtime verification. Update this table only with actual run output and device evidence.

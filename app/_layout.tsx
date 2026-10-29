@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '../src/auth';
 import { usePushNotifications } from '../src/usePushNotifications';
+import { AssignmentAlarmOverlay } from '../src/AssignmentAlarmOverlay';
 import { Btn, ErrorNotice, Txt } from '../src/ui';
 import { C, useThemeMode } from '../src/theme';
 
@@ -20,7 +21,7 @@ function Gate() {
     signOut,
   } = useAuth();
   const theme = useThemeMode();
-  usePushNotifications(session, profile?.role);
+  const push = usePushNotifications(session, profile?.role);
 
   if (!ready || (session && profileLoading)) {
     return (
@@ -61,6 +62,7 @@ function Gate() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="login" />
       </Stack>
+      <AssignmentAlarmOverlay alarm={push.alarm} onStop={push.clearAlarm} onSnooze={push.snoozeAlarm} />
     </>
   );
 }

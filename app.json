@@ -36,9 +36,15 @@
           "microphonePermission": false
         }
       ],
-      ["expo-notifications", { "color": "#ff4b50" }],
+      [
+        "expo-notifications",
+        {
+          "color": "#ff4b50"
+        }
+      ],
       "expo-router",
-      "@maplibre/maplibre-react-native"
+      "@maplibre/maplibre-react-native",
+      "expo-font"
     ],
     "extra": {
       "apiBaseUrl": "https://disaster-response-system-zhe5.onrender.com",

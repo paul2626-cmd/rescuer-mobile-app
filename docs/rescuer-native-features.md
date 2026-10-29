@@ -10,11 +10,11 @@ The audited API source contains no route for a Rescuer to upload their coordinat
 
 The operation record requests camera or photo-library access only when a Rescuer adds photos. It supports multiple gallery selection and camera capture, validates JPEG/PNG and 5 MB per file, limits the total to five saved plus new files, and submits multipart data to the existing record route. Existing photos are displayed using signed URLs. Failed uploads remain on the form for retry.
 
-## Push notifications
+## Push notifications and assignment alarm
 
-On Android the app requests notification permission, creates a rescue updates channel, obtains the native device token, registers it with the existing endpoint, and routes taps with an `assignment_id` to the assignment. Foreground notifications are shown by Expo Notifications.
+On Android the app requests notification permission, creates a rescue updates channel, obtains the native device token, registers it with the existing endpoint, and routes taps with an `assignment_id` to the assignment. Assignment pushes received while the app is foregrounded open a full-screen native modal with vibration, View, Snooze for five minutes, and Stop actions. Snooze uses a scheduled local notification.
 
-The source archive's Firebase config has a different Android package ID from `com.rescuer.mobile`, so it is not bundled. Real FCM delivery needs an authorized Firebase config for this exact package and verification on a physical device. Until then, registration may fail and in-app notification history remains available.
+The source archive's Android service also supports a full-screen alarm while the app is backgrounded or closed. That native Firebase service is not ported yet. Its Firebase config has a different Android package ID from `com.rescuer.mobile`, so it is not bundled. Real FCM delivery and the background/closed alarm need an authorized Firebase config for this exact package and verification on a physical device. Until then, in-app notification history remains available; the foreground alarm code is present but not verified on a device.
 
 ## Offline and background limits
 
