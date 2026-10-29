@@ -49,11 +49,18 @@ jobs:
       - name: Generate Android project
         run: npx expo prebuild --platform android --no-install --clean
 
-      - name: Assemble bundled release APK
+      - name: Assemble x86_64 emulator APK
         working-directory: android
-        run: ./gradlew assembleRelease -PreactNativeArchitectures=armeabi-v7a,arm64-v8a,x86_64 -Pandroid.enableMinifyInReleaseBuilds=true -Pandroid.enableShrinkResourcesInReleaseBuilds=true --no-daemon
+        run: ./gradlew assembleRelease -PreactNativeArchitectures=x86_64 -Pandroid.enableMinifyInReleaseBuilds=true -Pandroid.enableShrinkResourcesInReleaseBuilds=true --no-daemon
 
-      - name: Verify embedded bundle, architectures, and size
+      - name: Preserve emulator APK
+        run: cp android/app/build/outputs/apk/release/app-release.apk Kalinga-Rescuer-emulator.apk
+
+      - name: Assemble ARM phone APK
+        working-directory: android
+        run: ./gradlew assembleRelease -PreactNativeArchitectures=armeabi-v7a,arm64-v8a -Pandroid.enableMinifyInReleaseBuilds=true -Pandroid.enableShrinkResourcesInReleaseBuilds=true --no-daemon
+
+      - name: Verify phone APK bundle, architectures, and size
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -69,38 +76,25 @@ jobs:
                   for entry in entries
                   if entry.startswith("lib/") and entry.count("/") >= 2
               }
-              expected = {"armeabi-v7a", "arm64-v8a", "x86_64"}
+              expected = {"armeabi-v7a", "arm64-v8a"}
               if abis != expected:
-                  raise SystemExit(f"Expected ARM phone and x86_64 emulator libraries; found {sorted(abis)}")
+                  raise SystemExit(f"Expected only phone ARM libraries; found {sorted(abis)}")
           size = apk.stat().st_size
-          if size >= 100 * 1024 * 1024:
-              raise SystemExit(f"APK remains too large: {size} bytes (limit: 100 MiB)")
-          print(f"Verified bundled APK ({', '.join(sorted(abis))}): {size} bytes")
+          if size >= 70 * 1024 * 1024:
+              raise SystemExit(f"Phone APK is too large: {size} bytes (limit: 70 MiB)")
+          print(f"Verified ARM APK ({', '.join(sorted(abis))}): {size} bytes")
           PY
           cp android/app/build/outputs/apk/release/app-release.apk Kalinga-Rescuer-arm.apk
 
       - name: Launch release APK in Android emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 35
-          target: google_apis
+          api-level: 34
+          target: default
           arch: x86_64
           profile: pixel_2
           disable-animations: true
-          script: |
-            mkdir -p qa-output
-            adb install -r Kalinga-Rescuer-arm.apk
-            adb shell pm clear com.rescuer.mobile
-            adb logcat -c
-            adb shell cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -p com.rescuer.mobile || true
-            adb shell am start -n com.rescuer.mobile/.MainActivity || true
-            sleep 10
-            adb shell pidof com.rescuer.mobile > qa-output/pid.txt || true
-            adb exec-out screencap -p > qa-output/startup.png
-            adb shell uiautomator dump /sdcard/kalinga-ui.xml > qa-output/uiautomator.txt 2>&1 || true
-            adb exec-out cat /sdcard/kalinga-ui.xml > qa-output/ui.xml 2>/dev/null || true
-            adb logcat -d -t 5000 > qa-output/logcat.txt
-            python3 scripts/verify_android_startup.py qa-output/ui.xml qa-output/logcat.txt qa-output/pid.txt
+          script: python3 scripts/run_android_startup_smoke.py
 
       - name: Upload Android startup evidence
         if: always()
