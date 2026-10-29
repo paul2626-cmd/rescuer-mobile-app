@@ -7,12 +7,21 @@ from pathlib import Path
 
 
 def main() -> int:
-    if len(sys.argv) != 3:
-        print("usage: verify_android_startup.py UI_XML LOGCAT", file=sys.stderr)
+    if len(sys.argv) != 4:
+        print("usage: verify_android_startup.py UI_XML LOGCAT PID_FILE", file=sys.stderr)
         return 2
 
     ui_path = Path(sys.argv[1])
     log_path = Path(sys.argv[2])
+    pid_path = Path(sys.argv[3])
+
+    try:
+        if not pid_path.read_text().strip():
+            print("Kalinga Rescuer did not remain running after launch.", file=sys.stderr)
+            return 1
+    except OSError as error:
+        print(f"Could not read Android process status: {error}", file=sys.stderr)
+        return 1
 
     try:
         root = ET.parse(ui_path).getroot()
