@@ -4,9 +4,16 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { AppHeader } from '../../src/AppHeader';
 import { GlassTabBar } from '../../src/GlassTabBar';
+import { useAuth } from '../../src/auth';
 import { C } from '../../src/theme';
 
 export default function TabsLayout() {
+  const { ready, session, profile, profileLoading, profileError, configError } = useAuth();
+
+  if (!ready || !session || !profile || profileLoading || profileError || configError || profile.role !== 'RESCUER') {
+    return null;
+  }
+
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
       <AppHeader />
