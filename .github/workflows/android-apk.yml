@@ -51,7 +51,7 @@ jobs:
 
       - name: Assemble bundled ARM64 release APK
         working-directory: android
-        run: ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a -Pandroid.enableMinifyInReleaseBuilds=true -Pandroid.enableShrinkResourcesInReleaseBuilds=true --no-daemon
+        run: ./gradlew assembleRelease -PreactNativeArchitectures=armeabi-v7a,arm64-v8a -Pandroid.enableMinifyInReleaseBuilds=true -Pandroid.enableShrinkResourcesInReleaseBuilds=true --no-daemon
 
       - name: Verify embedded bundle, architecture, and size
         run: |
@@ -69,21 +69,21 @@ jobs:
                   for entry in entries
                   if entry.startswith("lib/") and entry.count("/") >= 2
               }
-              if abis != {"arm64-v8a"}:
-                  raise SystemExit(f"Expected ARM64-only native libraries; found {sorted(abis)}")
+              if abis != {"armeabi-v7a", "arm64-v8a"}:
+                  raise SystemExit(f"Expected ARM-only native libraries (ARMv7 + ARM64); found {sorted(abis)}")
           size = apk.stat().st_size
           if size >= 100 * 1024 * 1024:
               raise SystemExit(f"APK remains too large: {size} bytes (limit: 100 MiB)")
-          print(f"Verified bundled ARM64 APK: {size} bytes")
+          print(f"Verified bundled ARM APK (ARMv7 + ARM64): {size} bytes")
           PY
 
       - name: Name APK artifact
-        run: cp android/app/build/outputs/apk/release/app-release.apk Kalinga-Rescuer-arm64.apk
+        run: cp android/app/build/outputs/apk/release/app-release.apk Kalinga-Rescuer-arm.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: kalinga-rescuer-arm64-apk
+          name: kalinga-rescuer-arm-apk
           path: Kalinga-Rescuer-arm64.apk
           if-no-files-found: error
           retention-days: 14
