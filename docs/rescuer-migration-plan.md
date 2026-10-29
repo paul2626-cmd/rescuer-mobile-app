@@ -16,7 +16,7 @@
 - Core Expo routes and server role gate implemented.
 - Assignment response/status payloads checked against backend schemas and implemented with correct HTTP verbs and field names.
 - Rescue record multipart shape, final-save rule, photo limit/type/size and completion preconditions checked against backend source.
-- Native Android APK workflow prepared; CI result and APK artifact are pending.
+- The Android debug APK built successfully in GitHub Actions run [#2](https://github.com/paul2626-cmd/rescuer-mobile-app/actions/runs/40797161729), and the downloaded artifact was verified.
 
 ## Exit criteria not met
 
@@ -24,4 +24,4 @@
 - Matching Firebase Android configuration and real notification delivery.
 - Background GPS synchronization (no backend ingestion contract was found).
 - Offline mutation queue (no source behavior/idempotency contract was found).
-- APK build result and install check.
+- APK install and launch check on an Android device.
