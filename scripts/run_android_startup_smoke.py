@@ -94,7 +94,7 @@ def main() -> int:
 
     try:
         print("Installing x86_64 release APK.")
-        adb("install", "-r", str(APK), timeout=180)
+        adb("install", "-r", str(APK), timeout=600)
         adb("shell", "pm", "clear", "com.rescuer.mobile", timeout=45)
         adb("logcat", "-c", timeout=20, check=False)
         adb("shell", "am", "start", "-n", "com.rescuer.mobile/.MainActivity", timeout=45)
